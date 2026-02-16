@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check chat ownership
+    function isChatOwner(chatId) {
+      return get(/databases/$(database)/documents/chats/$(chatId)).data.userId == request.auth.uid;
+    }
+
+    // Users collection - users can only access their own profile
+    match /users/{userId} {
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Chats collection - users can only access their own chats
+    match /chats/{chatId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null && isChatOwner(chatId);
+      }
+
+      // Orders subcollection (reservations, catering, doordash)
+      match /orders/{orderId} {
+        allow read, write: if request.auth != null && isChatOwner(chatId);
+
+        // Call logs for this order (Vapi calls)
+        match /calls/{callId} {
+          allow read, write: if request.auth != null && isChatOwner(chatId);
+        }
+
+        // Email logs for this order
+        match /emails/{emailId} {
+          allow read, write: if request.auth != null && isChatOwner(chatId);
+        }
+
+        // Text/SMS logs for this order
+        match /texts/{textId} {
+          allow read, write: if request.auth != null && isChatOwner(chatId);
+        }
+      }
+    }
+
+    // Global polls collection (for team voting)
+    match /polls/{pollId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+    }
+
+    // Forms collection (dietary intake, etc.) - public access for shareable links
+    match /forms/{formId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if true;
+    }
+  }
+}

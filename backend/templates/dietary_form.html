@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ form.title }} - Edesia</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 560px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+        .header .logo { font-size: 24px; margin-bottom: 4px; }
+        .header h1 { font-size: 14px; font-weight: 500; opacity: 0.9; margin-bottom: 8px; }
+        .content { padding: 24px; }
+        .title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 24px;
+        }
+        .field { margin-bottom: 20px; }
+        .field label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .field label .optional {
+            font-weight: 400;
+            color: #999;
+            font-size: 12px;
+        }
+        .field input[type="text"],
+        .field input[type="email"],
+        .field textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .field input:focus,
+        .field textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .field textarea { resize: vertical; min-height: 80px; }
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            color: #333;
+        }
+        .checkbox-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .checkbox-item input {
+            width: 16px;
+            height: 16px;
+            accent-color: #667eea;
+        }
+        .checkbox-item.checked {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+        .none-item {
+            grid-column: 1 / -1;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 8px;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .submit-btn:active { transform: translateY(0); }
+        .footer {
+            padding: 16px 24px;
+            background: #f8f9fa;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+        }
+        .footer a { color: #667eea; text-decoration: none; }
+        .deadline {
+            font-size: 13px;
+            color: #888;
+            margin-top: 16px;
+            text-align: center;
+        }
+        .already-submitted {
+            text-align: center;
+            padding: 40px 24px;
+        }
+        .already-submitted .checkmark { font-size: 48px; margin-bottom: 16px; }
+        .already-submitted h2 { color: #333; margin-bottom: 8px; }
+        .already-submitted p { color: #666; margin-bottom: 20px; }
+        .btn-results {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .closed-banner {
+            background: #ff6b6b;
+            color: white;
+            text-align: center;
+            padding: 12px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <div class="logo">🍽️</div>
+            <h1>EDESIA DIETARY FORM</h1>
+        </div>
+
+        {% if form.is_closed %}
+        <div class="closed-banner">This form has closed</div>
+        <div class="already-submitted">
+            <h2>Submissions are closed</h2>
+            <p>Check out the results below.</p>
+            <a href="/f/{{ form.form_id }}/results" class="btn-results">View Results</a>
+        </div>
+        {% elif already_submitted %}
+        <div class="already-submitted">
+            <div class="checkmark">✓</div>
+            <h2>Thanks for submitting!</h2>
+            <p>Your dietary info has been recorded.</p>
+            <a href="/f/{{ form.form_id }}/results" class="btn-results">View Results</a>
+        </div>
+        {% else %}
+        <form method="POST" action="/f/{{ form.form_id }}/submit" class="content">
+            <h2 class="title">{{ form.title }}</h2>
+            <p class="subtitle">Help us plan the right food for {{ form.team_name }}.</p>
+
+            <div class="field">
+                <label>Your Name</label>
+                <input type="text" name="name" required placeholder="Enter your name">
+            </div>
+
+            <div class="field">
+                <label>Email <span class="optional">(optional)</span></label>
+                <input type="email" name="email" placeholder="your@email.com">
+            </div>
+
+            <div class="field">
+                <label>Dietary Restrictions</label>
+                <div class="checkbox-group">
+                    {% for option in dietary_options %}
+                    <label class="checkbox-item" onclick="toggleCheck(this)">
+                        <input type="checkbox" name="dietary" value="{{ option }}">
+                        {{ option }}
+                    </label>
+                    {% endfor %}
+                    <label class="checkbox-item none-item" onclick="toggleNone(this, 'dietary')">
+                        <input type="checkbox" name="dietary" value="None">
+                        None
+                    </label>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Allergies</label>
+                <div class="checkbox-group">
+                    {% for option in allergy_options %}
+                    <label class="checkbox-item" onclick="toggleCheck(this)">
+                        <input type="checkbox" name="allergies" value="{{ option }}">
+                        {{ option }}
+                    </label>
+                    {% endfor %}
+                    <label class="checkbox-item none-item" onclick="toggleNone(this, 'allergies')">
+                        <input type="checkbox" name="allergies" value="None">
+                        None
+                    </label>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Additional Notes <span class="optional">(optional)</span></label>
+                <textarea name="notes" placeholder="Any other dietary needs, preferences, or food requests..."></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">Submit</button>
+
+            {% if deadline_str %}
+            <p class="deadline">Form closes {{ deadline_str }}</p>
+            {% endif %}
+        </form>
+        {% endif %}
+
+        <div class="footer">
+            Powered by <a href="#">Edesia</a> - Office Food Planning
+        </div>
+    </div>
+
+    <script>
+        function toggleCheck(label) {
+            setTimeout(() => {
+                if (label.querySelector('input').checked) {
+                    label.classList.add('checked');
+                } else {
+                    label.classList.remove('checked');
+                }
+            }, 0);
+        }
+        function toggleNone(label, groupName) {
+            setTimeout(() => {
+                const checked = label.querySelector('input').checked;
+                if (checked) {
+                    label.classList.add('checked');
+                    // Uncheck all other checkboxes in this group
+                    document.querySelectorAll(`input[name="${groupName}"]`).forEach(cb => {
+                        if (cb.value !== 'None') {
+                            cb.checked = false;
+                            cb.closest('.checkbox-item').classList.remove('checked');
+                        }
+                    });
+                } else {
+                    label.classList.remove('checked');
+                }
+            }, 0);
+        }
+    </script>
+</body>
+</html>

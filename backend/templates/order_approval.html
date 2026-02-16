@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Approval - Edesia</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 560px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+        .header .logo { font-size: 24px; margin-bottom: 4px; }
+        .header h1 { font-size: 14px; font-weight: 500; opacity: 0.9; margin-bottom: 8px; }
+        .content { padding: 24px; }
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+        .detail-label { color: #888; }
+        .detail-value { color: #333; font-weight: 500; }
+        .items-section {
+            margin: 16px 0;
+        }
+        .items-section h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .item-name { flex: 1; }
+        .item-qty { width: 40px; text-align: center; color: #888; }
+        .item-price { width: 70px; text-align: right; font-weight: 500; color: #333; }
+        .pricing-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .pricing-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .pricing-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0 0;
+            margin-top: 8px;
+            border-top: 2px solid #ddd;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .per-person {
+            font-size: 13px;
+            color: #888;
+            text-align: right;
+            margin-top: 4px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-approve {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+        .btn-approve:hover { box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); }
+        .btn-reject {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+        .btn-reject:hover { box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4); }
+        .auth-prompt {
+            text-align: center;
+            padding: 32px;
+        }
+        .auth-prompt p { color: #666; margin-bottom: 16px; }
+        .btn-signin {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .loading { display: none; text-align: center; padding: 16px; color: #666; }
+        .footer {
+            padding: 16px 24px;
+            background: #f8f9fa;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+        }
+        .footer a { color: #667eea; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <div class="logo">🍽️</div>
+            <h1>EDESIA ORDER APPROVAL</h1>
+        </div>
+
+        <div class="content">
+            <!-- Auth check area -->
+            <div id="auth-required" class="auth-prompt" style="display: none;">
+                <p>Sign in to approve this order.</p>
+                <button class="btn-signin" onclick="signIn()">Sign in with Google</button>
+            </div>
+
+            <!-- Order details (shown after auth) -->
+            <div id="order-details" style="display: none;">
+                <h2 class="title">{{ order.vendor_name }}</h2>
+                <p class="subtitle">Order approval required</p>
+
+                {% if order.delivery_date or order.delivery_time %}
+                <div class="detail-row">
+                    <span class="detail-label">Delivery</span>
+                    <span class="detail-value">{{ order.delivery_date }} at {{ order.delivery_time }}</span>
+                </div>
+                {% endif %}
+                {% if order.delivery_address %}
+                <div class="detail-row">
+                    <span class="detail-label">Address</span>
+                    <span class="detail-value">{{ order.delivery_address }}</span>
+                </div>
+                {% endif %}
+                {% if order.headcount %}
+                <div class="detail-row">
+                    <span class="detail-label">Headcount</span>
+                    <span class="detail-value">{{ order.headcount }} people</span>
+                </div>
+                {% endif %}
+
+                {% if order.items %}
+                <div class="items-section">
+                    <h3>Items</h3>
+                    {% for item in order.items %}
+                    <div class="item-row">
+                        <span class="item-name">{{ item.name if item.name is defined else item }}</span>
+                        {% if item.quantity is defined %}
+                        <span class="item-qty">x{{ item.quantity }}</span>
+                        {% endif %}
+                        {% if item.price is defined %}
+                        <span class="item-price">${{ "%.2f"|format(item.price) }}</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="pricing-section">
+                    <div class="pricing-row">
+                        <span>Subtotal</span>
+                        <span>${{ "%.2f"|format(order.subtotal) }}</span>
+                    </div>
+                    {% if order.tax %}
+                    <div class="pricing-row">
+                        <span>Tax</span>
+                        <span>${{ "%.2f"|format(order.tax) }}</span>
+                    </div>
+                    {% endif %}
+                    {% if order.delivery_fee %}
+                    <div class="pricing-row">
+                        <span>Delivery Fee</span>
+                        <span>${{ "%.2f"|format(order.delivery_fee) }}</span>
+                    </div>
+                    {% endif %}
+                    {% if order.service_fee %}
+                    <div class="pricing-row">
+                        <span>Service Fee</span>
+                        <span>${{ "%.2f"|format(order.service_fee) }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="pricing-total">
+                        <span>Total</span>
+                        <span>${{ "%.2f"|format(order.total) }}</span>
+                    </div>
+                    {% if order.per_person %}
+                    <div class="per-person">${{ "%.2f"|format(order.per_person) }}/person</div>
+                    {% endif %}
+                </div>
+
+                {% if order.estimated_delivery %}
+                <div class="detail-row">
+                    <span class="detail-label">Est. Delivery</span>
+                    <span class="detail-value">{{ order.estimated_delivery }}</span>
+                </div>
+                {% endif %}
+
+                <div class="btn-group" id="btn-group">
+                    <button class="btn btn-approve" onclick="submitApproval(true)">Approve</button>
+                    <button class="btn btn-reject" onclick="submitApproval(false)">Reject</button>
+                </div>
+                <div class="loading" id="loading">Processing...</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Powered by <a href="#">Edesia</a> - Office Food Planning
+        </div>
+    </div>
+
+    <!-- Firebase Auth SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script>
+        const ACTION_ID = "{{ action_id }}";
+
+        // Firebase config (same as frontend)
+        const firebaseConfig = {
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.firebasestorage.app",
+            messagingSenderId: "000000000000",
+            appId: "0:000000000000:web:000000000000000000",
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        // Check auth state
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                document.getElementById("auth-required").style.display = "none";
+                document.getElementById("order-details").style.display = "block";
+            } else {
+                document.getElementById("auth-required").style.display = "block";
+                document.getElementById("order-details").style.display = "none";
+            }
+        });
+
+        function signIn() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider).catch(function(error) {
+                alert("Sign-in failed: " + error.message);
+            });
+        }
+
+        async function submitApproval(approved) {
+            const btnGroup = document.getElementById("btn-group");
+            const loading = document.getElementById("loading");
+            btnGroup.style.display = "none";
+            loading.style.display = "block";
+
+            try {
+                const user = firebase.auth().currentUser;
+                const token = await user.getIdToken();
+
+                const response = await fetch(`/o/${ACTION_ID}/approve`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        approved: approved,
+                        user_email: user.email,
+                    }),
+                });
+
+                if (response.ok) {
+                    window.location.href = `/o/${ACTION_ID}/status`;
+                } else {
+                    const data = await response.json();
+                    alert("Error: " + (data.detail || "Something went wrong"));
+                    btnGroup.style.display = "flex";
+                    loading.style.display = "none";
+                }
+            } catch (error) {
+                alert("Error: " + error.message);
+                btnGroup.style.display = "flex";
+                loading.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>

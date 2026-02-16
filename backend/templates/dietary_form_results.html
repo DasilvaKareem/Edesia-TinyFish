@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ form.title }} - Results - Edesia</title>
+    {% if not form.is_closed %}
+    <meta http-equiv="refresh" content="10">
+    {% endif %}
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 560px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+        .header .logo { font-size: 24px; margin-bottom: 4px; }
+        .header h1 { font-size: 14px; font-weight: 500; opacity: 0.9; margin-bottom: 8px; }
+        .content { padding: 24px; }
+        .title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+        .response-count {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 24px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .status-live { background: #d4edda; color: #155724; }
+        .status-closed { background: #f8d7da; color: #721c24; }
+        .section {
+            margin-bottom: 24px;
+        }
+        .section h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        .bar-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .bar-label {
+            width: 110px;
+            font-size: 13px;
+            color: #555;
+            flex-shrink: 0;
+        }
+        .bar-track {
+            flex: 1;
+            height: 24px;
+            background: #f0f0f0;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 12px;
+            transition: width 0.5s ease;
+            min-width: 2px;
+        }
+        .bar-fill.dietary { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .bar-fill.allergy { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+        .bar-count {
+            width: 40px;
+            text-align: right;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        .respondents {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .respondent-tag {
+            padding: 4px 12px;
+            background: #f0f2ff;
+            border-radius: 16px;
+            font-size: 13px;
+            color: #667eea;
+        }
+        .notes-list {
+            list-style: none;
+        }
+        .notes-list li {
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #555;
+            border-left: 3px solid #667eea;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 32px;
+            color: #888;
+        }
+        .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+        .btn-form {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 12px;
+        }
+        .footer {
+            padding: 16px 24px;
+            background: #f8f9fa;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+        }
+        .footer a { color: #667eea; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <div class="logo">🍽️</div>
+            <h1>EDESIA DIETARY FORM RESULTS</h1>
+        </div>
+
+        <div class="content">
+            <h2 class="title">
+                {{ form.title }}
+                {% if form.is_closed %}
+                <span class="status-badge status-closed">Closed</span>
+                {% else %}
+                <span class="status-badge status-live">Live</span>
+                {% endif %}
+            </h2>
+            <p class="response-count">{{ total_responses }} response{{ "s" if total_responses != 1 else "" }}</p>
+
+            {% if total_responses == 0 %}
+            <div class="empty-state">
+                <div class="icon">📋</div>
+                <p>No responses yet.</p>
+                {% if not form.is_closed %}
+                <a href="/f/{{ form.form_id }}" class="btn-form">Fill Out Form</a>
+                {% endif %}
+            </div>
+            {% else %}
+
+            {% if dietary_data %}
+            <div class="section">
+                <h3>Dietary Restrictions</h3>
+                {% for item in dietary_data %}
+                <div class="bar-row">
+                    <span class="bar-label">{{ item.name }}</span>
+                    <div class="bar-track">
+                        <div class="bar-fill dietary" style="width: {{ item.pct }}%"></div>
+                    </div>
+                    <span class="bar-count">{{ item.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if allergy_data %}
+            <div class="section">
+                <h3>Allergies</h3>
+                {% for item in allergy_data %}
+                <div class="bar-row">
+                    <span class="bar-label">{{ item.name }}</span>
+                    <div class="bar-track">
+                        <div class="bar-fill allergy" style="width: {{ item.pct }}%"></div>
+                    </div>
+                    <span class="bar-count">{{ item.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if notes %}
+            <div class="section">
+                <h3>Notes</h3>
+                <ul class="notes-list">
+                    {% for note in notes %}
+                    <li>{{ note }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="section">
+                <h3>Respondents</h3>
+                <div class="respondents">
+                    {% for name in respondents %}
+                    <span class="respondent-tag">{{ name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% endif %}
+
+            {% if not form.is_closed %}
+            <div style="text-align: center; margin-top: 16px;">
+                <a href="/f/{{ form.form_id }}" class="btn-form">Fill Out Form</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="footer">
+            Powered by <a href="#">Edesia</a> - Office Food Planning
+        </div>
+    </div>
+</body>
+</html>
